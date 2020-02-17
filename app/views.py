@@ -5,8 +5,10 @@ Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
 
-from app import app
-from flask import render_template, request, redirect, url_for, flash
+from app import app, mail
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_mail import Message 
+from app.forms import ContactForm
 
 
 ###
@@ -18,12 +20,38 @@ def home():
     """Render website's home page."""
     return render_template('home.html')
 
-
 @app.route('/about/')
 def about():
     """Render the website's about page."""
     return render_template('about.html', name="Mary Jane")
 
+@app.route('/contact', methods=['POST', 'GET'])
+def contact():
+    """Render website's contact page."""
+    form = ContactForm()
+    if form.validate_on_submit():        
+        print('-------------------------')
+        print(request.form['name'])
+        print(request.form['email'])
+        print(request.form['subject'])
+        print(request.form['message'])       
+        print('-------------------------')
+        send_message(request.form)
+        flash('message sent.')
+        return redirect(url_for('home'))
+         
+    return render_template('contact.html', form=form)
+
+def send_message(message):
+    print(message.get('name'))
+
+    msg = Message(request.form['subject'],
+        sender=(request.form['name'], "to@example.com"),
+        recipients = ['smtp.mailtrap.io'])
+    msg.body = request.form['message']
+    mail.send(msg)
+    print(msg)
+    
 
 ###
 # The functions below should be applicable to all Flask apps.
